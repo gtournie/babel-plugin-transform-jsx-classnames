@@ -11,4 +11,5 @@ coverage
 .nyc_output
 console.d.ts
 node_modules/
+benchmark/node_modules/
 dist/

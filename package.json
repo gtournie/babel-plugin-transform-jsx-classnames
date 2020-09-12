@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-transform-jsx-classnames",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "className and styleName on steroids",
   "main": "dist/index.js",
   "scripts": {

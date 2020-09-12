@@ -10,4 +10,5 @@ coverage
 .DS_Store
 .nyc_output
 console.d.ts
+node_modules/
 dist/

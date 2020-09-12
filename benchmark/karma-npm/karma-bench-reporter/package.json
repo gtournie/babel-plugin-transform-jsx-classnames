@@ -1,0 +1,5 @@
+{
+  "name":    "karma-bench-reporter",
+  "version": "0.0.1",
+  "main":    "lib/reporter.js"
+}

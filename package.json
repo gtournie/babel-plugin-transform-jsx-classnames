@@ -1,0 +1,55 @@
+{
+  "name": "babel-plugin-transform-jsx-classnames",
+  "version": "1.0.0",
+  "description": "className and styleName on steroids",
+  "main": "dist/index.js",
+  "scripts": {
+    "check:src": "npm run test",
+    "lint": "eslint *.js",
+    "test": "nyc --reporter=lcov --reporter=text mocha -- --recursive __tests__/*.js --full-trace",
+    "pretest": "npm run lint",
+    "coveralls": "cat coverage/lcov.info | coveralls"
+  },
+  "engines": {
+    "node": ">= 8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtournie/babel-plugin-transform-jsx-classnames.git"
+  },
+  "keywords": [
+    "className",
+    "styleName",
+    "classnames",
+    "cx",
+    "css",
+    "modules",
+    "react",
+    "babel",
+    "plugin",
+    "class",
+    "jsx"
+  ],
+  "author": "Tournier Guillaume <tournier.guillaume@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gtournie/babel-plugin-transform-jsx-classnames/issues"
+  },
+  "homepage": "https://github.com/gtournie/babel-plugin-transform-jsx-classnames#readme",
+  "dependencies": {
+    "babel-plugin-syntax-jsx": "^6.18.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "6.26.3",
+    "coveralls": "3.0.11",
+    "eslint": "6.8.0",
+    "eslint-config-prettier": "6.10.1",
+    "eslint-loader": "3.0.3",
+    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-node": "10.0.0",
+    "eslint-plugin-promise": "4.2.1",
+    "mocha": "7.1.1",
+    "nyc": "15.0.1"
+  }
+}

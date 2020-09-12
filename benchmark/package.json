@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "classnames": "^2.2.6",
+    "core-js": "^3.6.5",
+    "lodash": "^4.17.15"
+  },
+  "scripts": {
+    "build": "npx webpack",
+    "test": "npm run build && npx karma start karma-bench.conf.js "
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "babel-loader": "^8.1.0",
+    "benchmark": "^2.1.4",
+    "karma": "^1.7.0",
+    "karma-bench": "./karma-npm/karma-bench",
+    "karma-bench-reporter": "./karma-npm/karma-bench-reporter",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-safari-launcher": "^1.0.0",
+    "karma-sauce-launcher": "^1.0.0",
+    "node-env-file": "^0.1.8",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "browserslist": "> 0.5%, not IE <= 11"
+}

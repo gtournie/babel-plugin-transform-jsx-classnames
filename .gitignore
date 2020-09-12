@@ -1,0 +1,9 @@
+npm-debug.log*
+.npm
+.env
+node_modules
+.history
+.nyc_output
+.DS_Store
+coverage
+dist/

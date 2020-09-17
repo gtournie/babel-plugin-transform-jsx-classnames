@@ -2,19 +2,14 @@
 
 var SPACE = /\s/
 var MULTI_SPACE = /\s+/
-var PROTO = Object.prototype
-var HAS_OWN = PROTO.hasOwnProperty
+var HAS_OWN = {}.hasOwnProperty
 
 function process(ref, args) {
   for (var i = 0, len = args.length, arg, str, j, len2, arr; i < len; ++i) {
     if ((arg = args[i])) {
-      str = typeof arg
-      if (str === 'string') {
+      if ((str = typeof arg) === 'string') {
         if (SPACE.test(arg)) {
-          arr = arg.split(MULTI_SPACE)
-          j = 0
-          len2 = arr.length
-          while (j < len2) ref[arr[j++]] = 0
+          for (j = 0, arr = arg.split(MULTI_SPACE), len2 = arr.length; j < len2; ++j) ref[arr[j]] = 0
         } else ref[arg] = 0
       } else if (Array.isArray(arg)) {
         process(ref, arg)
@@ -34,15 +29,16 @@ function process(ref, args) {
       }
     }
   }
+  return ref
 }
 
 function O() {}
 O.prototype = Object.create(null)
 
 module.exports = function () {
-  var classNames = new O()
-  process(classNames, arguments, true)
-  var s = ''
-  for (var c in classNames) s = s === '' ? c : s + ' ' + c
-  return s
+  var s,
+    c,
+    classNames = process(new O(), arguments)
+  for (c in classNames) s = s ? s + ' ' + c : c
+  return s || ''
 }

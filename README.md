@@ -6,6 +6,10 @@
 
 className and styleName on steroids 💪
 
+## Usage
+
+Allow you to write jsx classNames in a simpler way, without having to worry about importing a helper (like [classnames](https://www.npmjs.com/package/classnames)). `className` or `styleName` attributes take any number of arguments which can be a string, an array or an object (if the value associated with a given key is falsy, that key won't be included in the output). [See examples](#examples)
+
 ## Install
 
 When babel-plugin-transform-jsx-classnames cannot resolve `className` / `styleName` during compilation, it imports a helper function (read [build time resolution](#build-time-resolution)). Therefore, you must install babel-plugin-react-css-modules as a direct dependency of the project.
@@ -21,10 +25,6 @@ $ npm install babel-plugin-transform-jsx-classnames --save
 ```
 
 > Note: ⚠️ If you're using `babel-plugin-react-css-modules`, ensure you're adding `transform-jsx-classnames` **before**
-
-## Usage
-
-Allow you to write jsx classNames in a simpler way, without having to worry about importing a helper (like [classnames](https://www.npmjs.com/package/classnames)). `className` or `styleName` attributes take any number of arguments which can be a string, an array or an object (if the value associated with a given key is falsy, that key won't be included in the output).
 
 ## Build time resolution
 
@@ -57,8 +57,8 @@ Dedupe has been optimized a lot and its performance is very similar to [classnam
 <div className={{ 'foo-bar': false }}>
 → <div className=""></div>
 
-<div className={{ foo: true }, { bar: true }}>
-→ <div className="foo bar"></div>
+<div className={{ foo: true }, { bar: true }, ["foobar", "duck"]}>
+→ <div className="foo bar foobar duck"></div>
 
 <div className={'foo', { bar: true, duck: false }, 'baz', { quux: true }}>
 → <div className="foo bar baz quux"></div>
@@ -83,6 +83,9 @@ When `className` / `styleName` can't be resolved at compilation.
 ```js
 <div className={"foo", { active: props.active }}>
 → <div className={_cx("foo", { active: props.active })}></div>
+
+<div className={{ foo: true, [`btn-${props.type}`]: true }}>
+→ <div className={_cx({ foo: true, [`btn-${props.type}`]: true })}></div>
 
 <div className={"foo", props.active && getClassName()}>
 → <div className={_cx("foo", props.active && getClassName())}></div>

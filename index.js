@@ -1,6 +1,7 @@
 const _cx = require('./cx')
 
 const PRIMITIVE_TYPES = ['NullLiteral', 'BooleanLiteral', 'NumericLiteral', 'StringLiteral']
+const SIMPLE_PROP_KEY_TYPES = ['Identifier', 'StringLiteral']
 
 module.exports = function (base) {
   const t = base.types
@@ -31,16 +32,15 @@ module.exports = function (base) {
 
   const extractArgs = (attrs, info = {}, depth = 0) => {
     const args = attrs.reduce((acc, attr) => {
-      if (info.onRuntime) return acc
       switch (attr.type) {
-        case 'NullLiteral':
-        case 'StringLiteral':
-        case 'NumericLiteral':
-          acc.push(attr.value)
+        case 'TemplateLiteral':
+          info.onRuntime = true
           return acc
-        // eslint-disable-next-line no-fallthrough
-        case 'ArrayExpression':
-          acc.push.apply(acc, extractArgs(attr.elements, info, depth + 1).args)
+        case 'StringLiteral':
+          acc.push(attr.value.trim())
+          return acc
+        case 'NumericLiteral':
+          if (attr.value) acc.push(attr.value)
           return acc
         case 'ObjectExpression':
           acc.push(
@@ -49,12 +49,13 @@ module.exports = function (base) {
                 prop.type === 'ObjectProperty' &&
                 prop.key &&
                 prop.value &&
-                PRIMITIVE_TYPES.includes(prop.value.type)
+                PRIMITIVE_TYPES.includes(prop.value.type) &&
+                SIMPLE_PROP_KEY_TYPES.includes(prop.key.type)
               ) {
-                h[prop.key.name] = prop.value.value
-              } else {
-                info.onRuntime = true
+                h[t.isIdentifier(prop.key) ? prop.key.name : prop.key.value] = prop.value.value
+                return h
               }
+              info.onRuntime = true
               return h
             }, {}),
           )
@@ -68,14 +69,66 @@ module.exports = function (base) {
     return { args, ...info }
   }
 
+  const flattenAttrs = (attrs, flat = []) => {
+    attrs.forEach((attr) => {
+      if (t.isArrayExpression(attr)) {
+        flattenAttrs(attr.elements, flat)
+      } else {
+        flat.push(attr)
+      }
+    })
+    return flat
+  }
+
+  const convertTemplateLiteral = (attr, method, info = { acc: [], change: true }) => {
+    let exp
+    switch (attr.type) {
+      case 'TemplateLiteral':
+        exp = attr.expressions.concat(attr.quasis).sort((a, b) => (a.start > b.start ? 1 : -1))
+        exp.forEach((e) => convertTemplateLiteral(e, method, info))
+        break
+      case 'TemplateElement':
+        info.acc.push(attr.value.raw)
+        break
+      case 'StringLiteral':
+        info.acc.push(attr.value)
+        break
+      case 'NullLiteral':
+      case 'NumericLiteral':
+        info.acc.push(String(attr.value))
+        break
+      default:
+        info.change = false
+    }
+    return info.change ? t.stringLiteral(info.acc.join('')) : attr
+  }
+
+  const convertObjectValues = (attr) => {
+    if (attr.type === 'ObjectExpression') {
+      attr.properties = attr.properties.map((prop) => {
+        if (prop.type === 'ObjectProperty' && prop.key && prop.value && PRIMITIVE_TYPES.includes(prop.value.type)) {
+          prop.value = t.numericLiteral(prop.value.value ? 1 : 0)
+        }
+        return prop
+      })
+    }
+    return attr
+  }
+
   const callCx = (prop, cxFunc, attrs, _cx, use) => {
+    attrs = flattenAttrs(attrs)
+      .filter((attr) => !t.isNullLiteral(attr))
+      .map((attr) => (t.isTemplateLiteral(attr) ? convertTemplateLiteral(attr) : convertObjectValues(attr)))
+
     const values = extractArgs(attrs)
     if (values.noChange) {
       return null
     }
     if (values.onRuntime) {
+      if (attrs.length === 1 && t.isTemplateLiteral(attrs[0]))
+        return t.JSXAttribute(t.JSXIdentifier(prop), t.JSXExpressionContainer(attrs[0]))
+
       use.flag = true
-      if (attrs.length === 1 && attrs[0].type === 'ArrayExpression') attrs = attrs[0].elements
       return t.JSXAttribute(t.JSXIdentifier(prop), t.JSXExpressionContainer(t.CallExpression(cxFunc, attrs)))
     }
     return t.JSXAttribute(t.JSXIdentifier(prop), t.stringLiteral(_cx(values.args)))
@@ -94,6 +147,7 @@ module.exports = function (base) {
             if (t.isJSXExpressionContainer(value)) {
               value = value.expression
             }
+            if (t.isTemplateLiteral(value)) return
             if (!value.expressions && (t.isBooleanLiteral(value) || t.isNullLiteral(value)) && !value.value) return
             paths.push(p)
             attrs = value.expressions || [value]
@@ -130,8 +184,8 @@ module.exports = function (base) {
       if (!attributes.attrs.length) return
       const attrValue = callCx(prop, cxFunc, attributes.attrs, _cx, use)
       if (attrValue === null) return
-      path.get('openingElement').pushContainer('attributes', attrValue)
       attributes.paths.forEach((path) => path.remove())
+      path.get('openingElement').pushContainer('attributes', attrValue)
     })
   }
 

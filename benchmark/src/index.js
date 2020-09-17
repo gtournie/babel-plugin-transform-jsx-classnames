@@ -61,7 +61,9 @@ function addTest(functions, queue) {
 addTest({ classnames, classnames2 }, [
   (f) => f('abc', 'def', null, 'ghi', undefined, 'jkl', 'mno'),
   (f) => f(['abc', 'def'], ['ghi', false], ['jkl', 'mno']),
-  (f) => f({ abc: 1, def: 1 }, { ghi: 1, jkl: 0, mno: 0, pqr: 0 }),
+  (f) => {
+    f({ abc: 1, def: 1, ghi: 1, jkl: 0, mno: 0, pqr: 0 }), f({ abc: 1, def: 1 }, { ghi: 1, jkl: 0, mno: 0, pqr: 0 })
+  },
   (f) =>
     f('a-c', 'def', 'ghi', null, { jkl: 1, mno: 1 }, false, { pqr: 1, stu: 1 }, ['vwx', 'yz0'], ['_123456', 'b789']),
 ])

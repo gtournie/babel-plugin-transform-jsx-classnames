@@ -32,9 +32,9 @@ The plugin will try to resolve the `className` / `styleName` during the compilat
 
 ## Runtime helper
 
-The runtime helper is very similar to the [classnames](https://www.npmjs.com/package/classnames) package. It actually behaves exactly like its [dedupe](https://www.npmjs.com/package/classnames#alternate-dedupe-version) version.
+The runtime helper is very similar to the [classnames](https://www.npmjs.com/package/classnames) package. It actually behaves like its [dedupe](https://www.npmjs.com/package/classnames#alternate-dedupe-version) version.
 
-The only difference you'll find will be with full numeric classNames: output will always spit number first (ex: `className={"a", 12}` => `className="12 a"`). It shouldn't be a big problem though, as using numeric values for classNames is pretty rare.
+The only difference you'll find will be with full numeric classNames: output will always spit numbers first (ex: `className={"a", 12}` => `className="12 a"`). It shouldn't be a big deal though, as using numeric values for classNames is pretty rare and order only matters in a very few specific cases.
 
 ## Performance & dedupe
 

@@ -121,10 +121,12 @@ describe('cx', function () {
 
   // dedupe
   it('should dedupe cx', function () {
+    assert.equal(cx('foo', 'bar', 'foo foo', 'bar foo bar'), 'foo bar')
     assert.equal(cx('foo', 'bar', 'foo foo', 'bar', { foo: true }), 'foo bar')
   })
 
   it('should make sure subsequent objects can remove/add classes', function () {
+    assert.equal(cx('foo', { foo: false }), '')
     assert.equal(cx('foo', { foo: false }, { foo: true, bar: true }), 'foo bar')
   })
 

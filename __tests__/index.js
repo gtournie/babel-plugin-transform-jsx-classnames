@@ -15,8 +15,8 @@ describe('base', function () {
     assert.strictEqual(c.getCode('<div className={12} />;'), '<div className="12" />;')
     assert.strictEqual(c.getCode('<div className={["element", "foo"]} />;'), '<div className="element foo" />;')
     assert.strictEqual(
-      c.getCode('<div className={["element", "foo", ["bar", { block: true }]]} />;'),
-      '<div className="element foo bar block" />;',
+      c.getCode('<div className={["element", "foo", ["bar", { block2: true }]]} />;'),
+      '<div className="element foo bar block2" />;',
     )
     assert.strictEqual(
       c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: true }]]} />;'),
@@ -77,6 +77,7 @@ describe('base', function () {
 
   it('should generate the className on run time', function () {
     assert.strictEqual(c.getBody('<div className={cbmod()} />;'), '<div className={_cx(cbmod())} />;')
+    assert.strictEqual(c.getBody('<div className={{ cbmod }} />;'), '<div className={_cx({ cbmod })} />;')
     assert.strictEqual(
       c.getBody('<div className={{ foo: new Date() }} />;'),
       '<div className={_cx({ foo: new Date() })} />;',
@@ -136,6 +137,10 @@ describe('base', function () {
     assert.strictEqual(
       c.getBody('<div className={"foobar", { [`foo`]: cmod(), bar: 1 }} />;'),
       '<div className={_cx("foobar", { [`foo`]: cmod(), bar: 1 })} />;',
+    )
+    assert.strictEqual(
+      c.getBody('<div className={"foobar", { [cmod]: true, bar }} />;'),
+      '<div className={_cx("foobar", { [cmod]: 1, bar })} />;',
     )
     assert.strictEqual(
       c.getBody('<div className={"foobar", { [`foo${cmod()}`]: 1, bar: 1 }} />;'),

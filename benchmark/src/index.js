@@ -12,7 +12,7 @@ import _ from 'lodash'
 const benchmark = require('benchmark')
 const Benchmark = benchmark.runInContext({ _, process })
 // eslint-disable-next-line no-undef
-window.Benchmark = Benchmark
+if (typeof window !== 'undefined') window.Benchmark = Benchmark
 // End of fix
 
 Benchmark.options.maxTime = 3

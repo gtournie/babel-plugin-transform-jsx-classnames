@@ -50,7 +50,10 @@ module.exports = function (base) {
                 prop.key &&
                 prop.value &&
                 PRIMITIVE_TYPES.includes(prop.value.type) &&
-                SIMPLE_PROP_KEY_TYPES.includes(prop.key.type)
+                SIMPLE_PROP_KEY_TYPES.includes(prop.key.type) &&
+                (!t.isIdentifier(prop.key) || !prop.computed) &&
+                !prop.method &&
+                !prop.shorthand
               ) {
                 h[t.isIdentifier(prop.key) ? prop.key.name : prop.key.value] = prop.value.value
                 return h

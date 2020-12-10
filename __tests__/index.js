@@ -18,18 +18,6 @@ describe('base', function () {
       c.getCode('<div className={["element", "foo", ["bar", { block2: true }]]} />;'),
       '<div className="element foo bar block2" />;',
     )
-    assert.strictEqual(
-      c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: true }]]} />;'),
-      '<div className="element foo bar block" />;',
-    )
-    assert.strictEqual(
-      c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: false }]]} />;'),
-      '<div className="element bar block" />;',
-    )
-    assert.strictEqual(
-      c.getCode('<div><div className={["element", "foo", "foo", ["bar", { block: true, foo: false }]]} /></div>;'),
-      '<div><div className="element bar block" /></div>;',
-    )
     assert.strictEqual(c.getCode('<div className={"fb bf", 0, `foo`} />;'), '<div className="fb bf foo" />;')
     assert.strictEqual(
       c.getCode('<div className={"fb bf", `foo ${"gg"} bar`} />;'),
@@ -48,24 +36,6 @@ describe('base', function () {
     assert.strictEqual(
       c.getCode('<div className={true ? "a" : false ? "b" : 12} />;'),
       '<div className={true ? "a" : false ? "b" : 12} />;',
-    )
-    assert.strictEqual(
-      c.getCode('<div className={"element", { foo: true }, ["bar", "foo"]} />;'),
-      '<div className="element foo bar" />;',
-    )
-    assert.strictEqual(
-      c.getCode('<div {...{ className: ("element", { foo: true }, ["bar", "foo"]) }} />;'),
-      '<div {...{}} className="element foo bar" />;',
-    )
-    assert.strictEqual(
-      c.getCode('<div {...{ foo: "bar", className: ("element", { foo: true }, ["bar", "foo"]) }} />;'),
-      '<div {...{ foo: "bar" }} className="element foo bar" />;',
-    )
-    assert.strictEqual(
-      c.getCode(
-        '<div {...{ foo: "bar", styleName: ["foo", "bar"], className: ("element", { foo: true }, ["bar", "foo"]) }} />;',
-      ),
-      '<div {...{ foo: "bar" }} className="element foo bar" styleName="foo bar" />;',
     )
     assert.strictEqual(c.getCode('<div className={`fb bf`} />;'), '<div className={`fb bf`} />;')
     assert.strictEqual(c.getCode('<div className={`fb ${"fbf"} bf`} />;'), '<div className={`fb ${"fbf"} bf`} />;')
@@ -157,6 +127,105 @@ describe('base', function () {
     assert.strictEqual(
       c.getBody('<div className={"foo", `${{ a: 1 }}`} />;'),
       '<div className={_cx("foo", `${{ a: 1 }}`)} />;',
+    )
+  })
+})
+
+describe('dedupe', function () {
+  it('should not dedupe', function () {
+    assert.strictEqual(
+      c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: true }]]} />;'),
+      '<div className="element foo foo bar block foo" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: false }]]} />;'),
+      '<div className="element foo foo bar block" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div><div className={["element", "foo", "foo", ["bar", { block: true, foo: false }]]} /></div>;'),
+      '<div><div className="element foo foo bar block" /></div>;',
+    )
+    assert.strictEqual(
+      c.getCode('<div className={"element", { foo: true }, ["bar", "foo"]} />;'),
+      '<div className="element foo bar foo" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div {...{ className: ("element", { foo: true }, ["bar", "foo"]) }} />;'),
+      '<div {...{}} className="element foo bar foo" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div {...{ foo: "bar", className: ("element", { foo: true }, ["bar", "foo"]) }} />;'),
+      '<div {...{ foo: "bar" }} className="element foo bar foo" />;',
+    )
+    assert.strictEqual(
+      c.getCode(
+        '<div {...{ foo: "bar", styleName: ["foo", "bar"], className: ("element", { foo: true }, ["bar", "foo"]) }} />;',
+      ),
+      '<div {...{ foo: "bar" }} className="element foo bar foo" styleName="foo bar" />;',
+    )
+  })
+
+  it('should import dedupe', function () {
+    assert.strictEqual(
+      c.getImport('<div className={cbmod()} />;', { dedupe: true }),
+      'import _cx from "babel-plugin-transform-jsx-classnames/dedupe";',
+    )
+  })
+
+  it('should dedupe', function () {
+    assert.strictEqual(
+      c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: true }]]} />;', { dedupe: true }),
+      '<div className="element foo bar block" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div className={["element", "foo foo", ["bar", { block: true, foo: false }]]} />;', { dedupe: true }),
+      '<div className="element bar block" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div><div className={["element", "foo", "foo", ["bar", { block: true, foo: false }]]} /></div>;', {
+        dedupe: true,
+      }),
+      '<div><div className="element bar block" /></div>;',
+    )
+    assert.strictEqual(
+      c.getCode('<div className={"element", { foo: true }, ["bar", "foo"]} />;', { dedupe: true }),
+      '<div className="element foo bar" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div {...{ className: ("element", { foo: true }, ["bar", "foo"]) }} />;', { dedupe: true }),
+      '<div {...{}} className="element foo bar" />;',
+    )
+    assert.strictEqual(
+      c.getCode('<div {...{ foo: "bar", className: ("element", { foo: true }, ["bar", "foo"]) }} />;', {
+        dedupe: true,
+      }),
+      '<div {...{ foo: "bar" }} className="element foo bar" />;',
+    )
+    assert.strictEqual(
+      c.getCode(
+        '<div {...{ foo: "bar", styleName: ["foo", "bar"], className: ("element", { foo: true }, ["bar", "foo"]) }} />;',
+        { dedupe: true },
+      ),
+      '<div {...{ foo: "bar" }} className="element foo bar" styleName="foo bar" />;',
+    )
+    // nothing to dedupe but ensure it's working as expected
+    assert.strictEqual(c.getBody('<div className={cbmod()} />;', { dedupe: true }), '<div className={_cx(cbmod())} />;')
+  })
+})
+
+describe('attributes', function () {
+  it('should use given attributes', function () {
+    assert.strictEqual(
+      c.getCode('<div myClassName={["element", ["bar", { block: true, foo: true }]]} />;', {
+        attributes: ['myClassName'],
+      }),
+      '<div myClassName="element bar block foo" />;',
+    )
+    assert.strictEqual(
+      c.getBody('<div myClassName={[null, "fb", { foo: cmod(), bar: "bar" }, ["elem"]]} />;', {
+        attributes: 'myClassName',
+      }),
+      '<div myClassName={_cx("fb", { foo: cmod(), bar: 1 }, "elem")} />;',
     )
   })
 })

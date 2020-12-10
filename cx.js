@@ -1,44 +1,65 @@
 'use strict'
 
-var SPACE = /\s/
-var MULTI_SPACE = /\s+/
 var HAS_OWN = {}.hasOwnProperty
 
-function process(ref, args) {
-  for (var i = 0, len = args.length, arg, str, j, len2, arr; i < len; ++i) {
-    if ((arg = args[i])) {
-      if ((str = typeof arg) === 'string') {
-        if (SPACE.test(arg)) {
-          for (j = 0, arr = arg.split(MULTI_SPACE), len2 = arr.length; j < len2; ++j) ref[arr[j]] = 0
-        } else ref[arg] = 0
-      } else if (Array.isArray(arg)) {
-        process(ref, arg)
-      } else if (str === 'object') {
-        for (str in arg) {
-          /* istanbul ignore next */
-          if (HAS_OWN.call(arg, str)) {
-            if (arg[str]) {
-              ref[str] = 0
-            } else if (0 === ref[str]) {
-              delete ref[str]
-            }
-          }
+function getClass(arg) {
+  if (typeof arg === 'string') return arg
+
+  var s,
+    className = ''
+  if (Array.isArray(arg)) {
+    for (var k = 0, len = arg.length; k < len; ++k) {
+      if ((s = arg[k]))
+        if ((s = getClass(s))) {
+          if (className) className += ' '
+          className += s
         }
-      } else if (str === 'number') {
-        ref[arg] = 0
+    }
+    return className
+  }
+  if (typeof arg === 'object') {
+    for (s in arg) {
+      if (arg[s] && s) {
+        /* istanbul ignore next */
+        if (HAS_OWN.call(arg, s)) {
+          if (className) className += ' '
+          className += s
+        }
       }
     }
+    return className
   }
-  return ref
+  if (typeof arg === 'number') return '' + arg
+  return className
 }
 
-function O() {}
-O.prototype = Object.create(null)
-
-module.exports = function () {
-  var s,
-    c,
-    classNames = process(new O(), arguments)
-  for (c in classNames) s = s ? s + ' ' + c : c
-  return s || ''
+module.exports = function (arg0) {
+  var className = '',
+    len = arguments.length,
+    str
+  // Most common cases. Though a bit redundant, it's just way faster...
+  if (1 == len) {
+    if (typeof arg0 === 'string') return arg0
+    if (!Array.isArray(arg0) && typeof arg0 === 'object') {
+      for (str in arg0) {
+        if (arg0[str] && str) {
+          /* istanbul ignore next */
+          if (HAS_OWN.call(arg0, str)) {
+            if (className) className += ' '
+            className += str
+          }
+        }
+      }
+      return className
+    }
+  }
+  // General cases
+  for (var i = 0; i < len; ++i) {
+    if ((str = arguments[i]))
+      if ((str = getClass(str))) {
+        if (className) className += ' '
+        className += str
+      }
+  }
+  return className
 }

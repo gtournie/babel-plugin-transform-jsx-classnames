@@ -13,4 +13,5 @@ const transform = (code, opts) =>
 module.exports = {
   getCode: (source, opts) => transform(source, opts),
   getBody: (source, opts) => transform(source, opts).split('\n').slice(1).join(''),
+  getImport: (source, opts) => transform(source, opts).split('\n')[0],
 }

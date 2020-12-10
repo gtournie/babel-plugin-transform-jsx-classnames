@@ -1,5 +1,6 @@
 import classnames from 'classnames'
-import classnames2 from '../../cx'
+import clsx from 'clsx'
+import cx from '../../cx'
 import { complete as karmaComplete } from './karma-utils'
 
 // Fix errors:
@@ -27,23 +28,24 @@ function addTest(functions, queue) {
       test(func)
     })
   })
+
   suite.on('cycle', function () {
     // console.log(String(event.target))
   })
   suite.on('complete', function () {
-    const fastest = this.filter('fastest')
-    const slowest = this.filter('slowest')
+    const fastest = this.filter('fastest').sort((a, b) => (a.hz > b.hz ? -1 : 1))[0]
+    const slowest = this.filter('slowest').sort((a, b) => (a.hz > b.hz ? 1 : -1))[0]
 
     const data = this.filter('successful').map((bench) => {
-      if (_.indexOf(fastest, bench) < 0) {
-        bench.speed = `${Math.round((1 - bench.hz / fastest[0].hz) * 100)}% slower`
+      if (fastest !== bench) {
+        bench.speed = `${Math.round((1 - bench.hz / fastest.hz) * 100)}% slower`
       } else {
-        const speed = bench.hz / slowest[0].hz
-        bench.speed = `up to ${speed.toFixed(speed < 10 ? 1 : 0)}x faster`
+        const speed = bench.hz / slowest.hz
+        bench.speed = `up to ${speed.toFixed(speed < 10 ? 2 : 1)}x faster`
       }
       const ops = Benchmark.formatNumber(bench.hz.toFixed(bench.hz < 100 ? 2 : 0))
       const rme = `(\xb1${bench.stats.rme.toFixed(2)}%)`
-      return `${ops} ${rme}<br />${bench.speed}`
+      return `${ops} ${rme} ${bench.speed}`
     })
 
     console.log('| ' + data.join(' | ') + ' |')
@@ -58,12 +60,17 @@ function addTest(functions, queue) {
   suite.run({ async: true })
 }
 
-addTest({ classnames, classnames2 }, [
-  (f) => f('abc', 'def', null, 'ghi', undefined, 'jkl', 'mno'),
-  (f) => f(['abc', 'def'], ['ghi', false], ['jkl', 'mno']),
+addTest({ cx, clsx }, [
+  (f) => {
+    f('classname'), f('foo', 'bar', 'foobar'), f('abc', 'def', null, 'ghi', undefined, '', 'jkl', 'mno')
+  },
+  (f) => {
+    f(['abc', 'def'], ['ghi', false], ['jkl', ['mno']], []), f(['abc', 'def', false])
+  },
   (f) => {
     f({ abc: 1, def: 1, ghi: 1, jkl: 0, mno: 0, pqr: 0 }), f({ abc: 1, def: 1 }, { ghi: 1, jkl: 0, mno: 0, pqr: 0 })
   },
-  (f) =>
-    f('a-c', 'def', 'ghi', null, { jkl: 1, mno: 1 }, false, { pqr: 1, stu: 1 }, ['vwx', 'yz0'], ['_123456', 'b789']),
+  (f) => {
+    f('a-c', 'def', 'ghi', null, { jkl: 1, mno: 1, pqr: 0, stu: 0 }, false, ['vwx', 'yz0', '_123456', 'b789'])
+  },
 ])

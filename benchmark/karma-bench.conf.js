@@ -9,19 +9,11 @@
 require('node-env-file')(__dirname + '/.env', { raise: false })
 
 var browsers = {
-  CHROME_V81: { base: 'SauceLabs', browserName: 'chrome', version: '81', platform: 'OS X 10.14' },
-  FIREFOX_V75: { base: 'SauceLabs', browserName: 'firefox', version: '75', platform: 'OS X 10.14' },
-  SAFARI_V13: { base: 'SauceLabs', browserName: 'safari', version: '13', platform: 'OS X 10.13' },
-  EDGE_V80: { base: 'SauceLabs', browserName: 'MicrosoftEdge', version: '80', platform: 'Windows 10' },
-  IE_V11: { base: 'SauceLabs', browserName: 'internet explorer', version: '11', platform: 'Windows 10' },
-  LG_NEXUS5: {
-    base: 'SauceLabs',
-    appiumVersion: '1.9.1',
-    browserName: 'chrome',
-    deviceName: 'Android GoogleAPI Emulator',
-    platform: 'Android',
-    platformVersion: '8.0',
-  },
+  CHROME_V87: { base: 'SauceLabs', browserName: 'chrome', version: '87', platform: 'OS X 10.15' },
+  FIREFOX_V83: { base: 'SauceLabs', browserName: 'firefox', version: '83', platform: 'OS X 10.15' },
+  SAFARI_V14: { base: 'SauceLabs', browserName: 'safari', version: '14' },
+  EDGE_V86: { base: 'SauceLabs', browserName: 'MicrosoftEdge', version: '86', platform: 'OS X 10.15' },
+  // IE_V11: { base: 'SauceLabs', browserName: 'internet explorer', version: '11', platform: 'Windows 10' },
 }
 
 module.exports = function (config) {

@@ -8,7 +8,7 @@ className and styleName on steroids 💪
 
 ## Usage
 
-Allow you to write jsx classNames in a simpler way, without having to worry about importing a helper (like [classnames](https://www.npmjs.com/package/classnames)). `className` or `styleName` attributes take any number of arguments which can be a string, an array or an object (if the value associated with a given key is falsy, that key won't be included in the output). [See examples](#examples)
+Allow you to write jsx classNames in a simpler way, without having to worry about importing a helper (like [clsx](https://www.npmjs.com/package/clsx) or [classnames](https://www.npmjs.com/package/classnames)). `className` or `styleName` attributes take any number of arguments which can be a string, an array or an object (if the value associated with a given key is falsy, that key won't be included in the output). [See examples](#examples)
 
 ## Install
 
@@ -20,7 +20,13 @@ $ npm install babel-plugin-transform-jsx-classnames --save
 
 ```js
 {
-  plugins: ['transform-jsx-classnames']
+  plugins: [
+    ['transform-jsx-classnames', {
+      // default options
+      dedupe: false,
+      attributes: ['className', 'styleName']
+    }]
+  ]
 }
 ```
 
@@ -28,17 +34,21 @@ $ npm install babel-plugin-transform-jsx-classnames --save
 
 ## Build time resolution
 
-The plugin will try to resolve the `className` / `styleName` during the compilation (`className={"foo", { active: true }}`) and fallback to runtime if not possible (`className={_cx("foo", { active: props.active })}` - a tiny helper (~0.3Ko) will be included automatically.
+The plugin will try to resolve the `className` / `styleName` during the compilation (`className={"foo", { active: true }}`) and fallback to runtime if not possible (`className={_cx("bar", { disabled: props.disabled })}` - a tiny helper (256B minified) will be included automatically.
 
 ## Runtime helper
 
-The runtime helper is very similar to the [classnames](https://www.npmjs.com/package/classnames) package. It actually behaves like its [dedupe](https://www.npmjs.com/package/classnames#alternate-dedupe-version) version.
+The runtime helper is similar to the [clsx](https://www.npmjs.com/package/clsx) package. See [examples](#runtime).
+
+### dedupe
+
+Dedupe behaves like the classname [dedupe](https://www.npmjs.com/package/classnames#alternate-dedupe-version) version. Way faster though. Its speed is similar to `classnames` in no dedupe version.
 
 The only difference you'll find will be with full numeric classNames: output will always spit numbers first (ex: `className={"a", 12}` => `className="12 a"`). It shouldn't be a big deal though, as using numeric values for classNames is pretty rare and order only matters in a very few specific cases.
 
-## Performance & dedupe
+## Performance
 
-Dedupe has been optimized a lot and its performance is very similar to [classnames](https://www.npmjs.com/package/classnames) (in no dedupe mode). It's even better in some cases.
+See benchmark dir.
 
 ## Examples
 
@@ -80,7 +90,7 @@ Dedupe has been optimized a lot and its performance is very similar to [classnam
 
 When `className` / `styleName` can't be resolved at compilation.
 
-```js
+```html
 <div className={"foo", { active: props.active }}>
 → <div className={_cx("foo", { active: props.active })}></div>
 

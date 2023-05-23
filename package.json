@@ -1,8 +1,8 @@
 {
   "name": "babel-plugin-transform-jsx-classnames",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "className and styleName on steroids",
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
     "check:src": "npm run test",
     "lint": "eslint *.js",

@@ -1,5 +1,5 @@
-const _cx = require('./cx')
-const _dedupe = require('./dedupe')
+const cx = require('./cx')
+const dedupe = require('./dedupe')
 
 const PRIMITIVE_TYPES = ['NullLiteral', 'BooleanLiteral', 'NumericLiteral', 'StringLiteral']
 const SIMPLE_PROP_KEY_TYPES = ['Identifier', 'StringLiteral']
@@ -7,10 +7,10 @@ const SIMPLE_PROP_KEY_TYPES = ['Identifier', 'StringLiteral']
 module.exports = function (base) {
   const t = base.types
 
-  const requireCx = (cxFunc, fileName) => {
+  const requireCx = (fileName) => {
     return [
       t.ImportDeclaration(
-        [t.ImportDefaultSpecifier(cxFunc)],
+        [t.ImportDefaultSpecifier(cxId)],
         t.StringLiteral('babel-plugin-transform-jsx-classnames/' + fileName),
       ),
     ]
@@ -118,7 +118,7 @@ module.exports = function (base) {
     return attr
   }
 
-  const callCx = (prop, cxFunc, attrs, _cx, use) => {
+  const callCx = (prop, attrs) => {
     attrs = flattenAttrs(attrs)
       .filter((attr) => !t.isNullLiteral(attr))
       .map((attr) => (t.isTemplateLiteral(attr) ? convertTemplateLiteral(attr) : convertObjectValues(attr)))
@@ -131,10 +131,10 @@ module.exports = function (base) {
       if (attrs.length === 1 && t.isTemplateLiteral(attrs[0]))
         return t.JSXAttribute(t.JSXIdentifier(prop), t.JSXExpressionContainer(attrs[0]))
 
-      use.flag = true
-      return t.JSXAttribute(t.JSXIdentifier(prop), t.JSXExpressionContainer(t.CallExpression(cxFunc, attrs)))
+      flags.used = true
+      return t.JSXAttribute(t.JSXIdentifier(prop), t.JSXExpressionContainer(t.CallExpression(cxId, attrs)))
     }
-    return t.JSXAttribute(t.JSXIdentifier(prop), t.stringLiteral(_cx(values.args)))
+    return t.JSXAttribute(t.JSXIdentifier(prop), t.stringLiteral(cxFunc(values.args)))
   }
 
   const readAttributes = (path, selectedAttributes) => {
@@ -181,51 +181,51 @@ module.exports = function (base) {
     return info
   }
 
-  const mutateAttributes = (path, info, cxFunc, _cx, use) => {
+  const mutateAttributes = (path, info) => {
     Object.keys(info).forEach((prop) => {
       const attributes = info[prop]
       if (!attributes.attrs.length) return
-      const attrValue = callCx(prop, cxFunc, attributes.attrs, _cx, use)
+      const attrValue = callCx(prop, attributes.attrs)
       if (attrValue === null) return
       attributes.paths.forEach((path) => path.remove())
       path.get('openingElement').pushContainer('attributes', attrValue)
     })
   }
 
-  const JSXChildElementVisitor = {
-    JSXElement(path) {
-      mutateAttributes(path, readAttributes(path, this.options.attributes), this.cxFunc, this._cx, this.use)
-    },
+  function getOptions(stats) {
+    const options = Object.assign(
+      {
+        dedupe: false,
+        attributes: ['className', 'styleName'],
+      },
+      /* istanbul ignore next */
+      stats.opts || {},
+    )
+    if (!Array.isArray(options.attributes)) options.attributes = [options.attributes]
+    return options
   }
 
-  const JSXRootElementVisitor = {
-    JSXElement(path) {
-      const cxFunc = this.cxFunc
-      const _cx = this._cx
-      const options = this.options
-      const use = this.use
-      mutateAttributes(path, readAttributes(path, options.attributes), cxFunc, _cx, use)
-      path.traverse(JSXChildElementVisitor, { cxFunc, options, _cx, use })
-      path.stop()
-    },
-  }
+  let options;
+  let cxId;
+  let flags;
+  let programPath
+  let cxFunc
 
   return {
     visitor: {
-      Program(path, state) {
-        const options = Object.assign(
-          {
-            dedupe: false,
-            attributes: ['className', 'styleName'],
-          },
-          /* istanbul ignore next */
-          state.opts || {},
-        )
-        if (!Array.isArray(options.attributes)) options.attributes = [options.attributes]
-        const cxFunc = path.scope.generateUidIdentifier('_cx')
-        const use = { flag: false }
-        path.traverse(JSXRootElementVisitor, { cxFunc, options, use, _cx: options.dedupe ? _dedupe : _cx })
-        if (use.flag) path.unshiftContainer('body', requireCx(cxFunc, options.dedupe ? 'dedupe' : 'cx'))
+      JSXElement(path) {
+        mutateAttributes(path, readAttributes(path, options.attributes))
+        if (flags.used && !flags.imported) {
+          flags.imported = true;
+          programPath.unshiftContainer('body', requireCx(options.dedupe ? 'dedupe' : 'cx'))
+        }
+      },
+      Program(path, stats) {
+        programPath = path
+        options = getOptions(stats)
+        cxId = path.scope.generateUidIdentifier('_cx')
+        cxFunc = options.dedupe ? dedupe : cx
+        flags = { used: false, imported: false }
       },
     },
     inherits: require('babel-plugin-syntax-jsx'),
